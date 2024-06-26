@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.kotlinSerialization)
 }
 
 kotlin {
@@ -36,17 +37,44 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.kotlinx.coroutines.android)
+            implementation(libs.ktor.client.android)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material)
+            implementation(compose.material3)
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
+
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.serialization.json)
+            implementation(libs.kotlinx.datetime)
+
+            implementation(libs.voyager.navigation)
+            implementation(libs.voyager.bottomSheetNavigator)
+            implementation(libs.voyager.screenmodel)
+            implementation(libs.voyager.tabNavigator)
+            implementation(libs.voyager.transitions)
+
+            implementation(libs.bundles.ktor.common)
+            implementation(libs.ktor.client.auth)
+
+            implementation(libs.coil.compose)
+            implementation(libs.coil.network.ktor)
+
+            api("io.github.kevinnzou:compose-webview-multiplatform:1.9.8")
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
+            implementation(libs.kotlinx.coroutines.swing)
+            implementation(libs.ktor.client.java)
+            implementation(libs.kcef)
+        }
+        iosMain.dependencies {
+            implementation(libs.ktor.client.darwin)
         }
     }
 }
@@ -96,6 +124,21 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "org.uptoapp.nasaimager"
             packageVersion = "1.0.0"
+            includeAllModules = true
+        }
+
+        buildTypes.release.proguard {
+            configurationFiles.from("compose-desktop.pro")
+        }
+    }
+
+    afterEvaluate {
+        tasks.withType<JavaExec> {
+            if (System.getProperty("os.name").contains("Mac")) {
+                jvmArgs("--add-opens", "java.desktop/sun.awt=ALL-UNNAMED")
+                jvmArgs("--add-opens", "java.desktop/sun.lwawt=ALL-UNNAMED")
+                jvmArgs("--add-opens", "java.desktop/sun.lwawt.macosx=ALL-UNNAMED")
+            }
         }
     }
 }
